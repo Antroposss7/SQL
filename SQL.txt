@@ -1,0 +1,124 @@
+CREATE DATABASE MoviesApp;
+
+USE MoviesApp;
+
+-- Directors table
+CREATE TABLE Directors (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(50),
+    Surname NVARCHAR(50)
+);
+
+-- Movies table
+CREATE TABLE Movies (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(100),
+    Description TEXT,
+    CoverPhoto NVARCHAR(255),
+    DirectorId INT,
+    LanguageId INT,
+    FOREIGN KEY (DirectorId) REFERENCES Directors(Id),
+    FOREIGN KEY (LanguageId) REFERENCES Languages(Id)
+);
+
+-- Actors table
+CREATE TABLE Actors (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(50),
+    Surname NVARCHAR(50)
+);
+
+Table yaratmaq
+CREATE TABLE Genres (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(50)
+);
+
+Language table
+CREATE TABLE Languages (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(50)
+);
+
+MoviesActors relation table
+CREATE TABLE MoviesActors (
+    MovieId INT,
+    ActorId INT,
+    PRIMARY KEY (MovieId, ActorId),
+    FOREIGN KEY (MovieId) REFERENCES Movies(Id),
+    FOREIGN KEY (ActorId) REFERENCES Actors(Id)
+);
+
+MoviesGenres relation table
+CREATE TABLE MoviesGenres (
+    MovieId INT,
+    GenreId INT,
+    PRIMARY KEY (MovieId, GenreId),
+    FOREIGN KEY (MovieId) REFERENCES Movies(Id),
+    FOREIGN KEY (GenreId) REFERENCES Genres(Id)
+);
+
+
+2. Data Insert etmek
+
+Data
+INSERT INTO Directors (Name, Surname) VALUES
+('Christopher', 'Nolan'),
+('Steven', 'Spielberg'),
+('Martin', 'Scorsese');
+
+Languages data
+INSERT INTO Languages (Name) VALUES ('English'), ('Azerbaijani'), ('Russian');
+
+Movies data (example for Nolan)
+INSERT INTO Movies (Name, Description, CoverPhoto, DirectorId, LanguageId) VALUES
+('Inception', 'A thief enters dreams...', 'inception.jpg', 1, 1),
+('Interstellar', 'Space journey...', 'interstellar.jpg', 1, 1);
+
+Actors data
+INSERT INTO Actors (Name, Surname) VALUES
+('Leonardo', 'DiCaprio'),
+('Ruslan', 'Murtuzeliyev'),
+('Rovsen', 'Aliyev');
+
+Genres data
+INSERT INTO Genres (Name) VALUES ('Triller'), ('Comedy'), ('Drama');
+
+MoviesActors data for 'Inception'
+INSERT INTO MoviesActors (MovieId, ActorId) VALUES (1, 1), (1, 2);
+
+MoviesGenres data for 'Inception'
+INSERT INTO MoviesGenres (MovieId, GenreId) VALUES (1, 1), (1, 2);
+
+
+
+
+CREATE PROCEDURE GetDirectorMoviesWithLanguage @directorId INT AS
+BEGIN
+    SELECT m.Name AS MovieName, l.Name AS Language
+    FROM Movies m
+    JOIN Directors d ON m.DirectorId = d.Id
+    JOIN Languages l ON m.LanguageId = l.Id
+    WHERE d.Id = @directorId;
+END;
+
+
+CREATE FUNCTION GetMovieCountByLanguage (@languageId INT)
+RETURNS INT AS
+BEGIN
+    DECLARE @count INT;
+    SELECT @count = COUNT(*)
+    FROM Movies
+    WHERE LanguageId = @languageId;
+    RETURN @count;
+END;
+
+
+CREATE TRIGGER ShowAllMoviesWithDetails AFTER INSERT ON Movies
+FOR EACH ROW 
+BEGIN
+    SELECT m.Name AS MovieName, d.Name AS DirectorName, d.Surname AS DirectorSurname, l.Name AS Language
+    FROM Movies m
+    JOIN Directors d ON m.DirectorId = d.Id
+    JOIN Languages l ON m.LanguageId = l.Id;
+END;
